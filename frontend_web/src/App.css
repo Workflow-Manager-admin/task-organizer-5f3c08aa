@@ -1,0 +1,159 @@
+/* CSS Variables for branded palette and responsive light UI */
+:root {
+  --color-accent: #e94e77;
+  --color-primary: #4a90e2;
+  --color-secondary: #50e3c2;
+  --background-main: #f8f9fa;
+  --background-white: #fff;
+  --border-light: #e9ecef;
+  --shadow-light: 0 0 10px 0 rgba(74,144,226,0.06);
+}
+
+/* General body styles */
+body {
+  background: var(--background-main);
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;
+  color: #222;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.todo-header {
+  box-shadow: var(--shadow-light);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: inherit;
+  letter-spacing: 0.01em;
+}
+
+/* Task input style */
+.task-input {
+  border: 1.3px solid var(--color-primary);
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 1.05rem;
+  background: var(--background-white);
+  color: var(--color-primary);
+  font-weight: 400;
+  box-sizing: border-box;
+  transition: border 0.13s;
+}
+.task-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0 1.3rem;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.16s;
+  min-height: 100%;
+}
+.btn-primary:hover {
+  background: #c13a60;
+}
+
+/* Filter Button */
+.filter-btn {
+  outline: none;
+  transition: background 0.17s;
+}
+.filter-btn:focus {
+  border-color: var(--color-accent);
+}
+
+/* Task List and Row */
+.task-list {
+  background: var(--background-white);
+  border-radius: 14px;
+  box-shadow: var(--shadow-light);
+  margin-top: 2rem;
+  list-style: none;
+  padding: 0;
+}
+.task-row {
+  transition: background 0.11s, opacity 0.11s;
+  border-bottom: 1px solid var(--border-light);
+}
+.task-row:last-child {
+  border-bottom: none;
+}
+
+/* Editing input */
+.edit-input {
+  border: 1.6px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 0.7rem;
+  font-size: 1rem;
+  color: #222;
+  background: #fefefe;
+  width: 99%;
+  transition: border 0.14s;
+}
+.edit-input:focus {
+  border-color: var(--color-secondary);
+}
+
+/* Actions */
+.action-edit {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 7px;
+  padding: 0.4rem 0.75rem;
+  margin-right: 3px;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.action-edit:hover {
+  background: #3469b6;
+}
+.action-delete {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 7px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+.action-delete:hover {
+  background: #c13a60;
+}
+
+/* Misc states and responsive adjustments */
+@media (max-width: 768px) {
+  .task-list {
+    margin-top: 1.2rem;
+    max-width: 97vw;
+  }
+  .todo-header {
+    padding: 1.2rem 0 0.7rem 0 !important;
+  }
+  .filter-controls {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .task-input, .btn-primary {
+    font-size: .97rem;
+    padding: 0.7rem 1rem;
+  }
+  .edit-input {
+    padding: 0.5rem;
+    font-size: 0.98rem;
+  }
+}
