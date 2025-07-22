@@ -1,74 +1,114 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-// Import the Supabase JS client
 import { createClient } from '@supabase/supabase-js';
 
 // PUBLIC_INTERFACE
 /**
- * Main App component for the To-Do list application.
- * Implements modern, minimalistic UI with task CRUD, status filtering, responsive design, and
- * integrates with Supabase as backend for all data operations.
+ * Main App component for the To-Do list application using Supabase for all CRUD.
  * 
- * Ensure you have the following in your .env file (at the project root!):
- *   REACT_APP_SUPABASE_URL = https://your-project-ref.supabase.co
- *   REACT_APP_SUPABASE_KEY = your-anon-or-service-role-key
+ * ENVIRONMENT:
+ *   Your .env file in project root MUST include:
+ *     REACT_APP_SUPABASE_URL=https://your-supabase-project.supabase.co
+ *     REACT_APP_SUPABASE_KEY=your-anon-or-service-role-key
+ *   You MUST restart npm after editing .env
+ *   In Supabase, create table 'tasks' as:
+ *     id: bigint (PK, generated always as identity)
+ *     title: text
+ *     completed: boolean (default false)
+ *     created_at: timestamp (default now())
  * 
- * You need to restart (not just hot reload) the dev server after adding/changing env vars.
+ * All CRUD logic below connects live to Supabase project!
  */
 function App() {
-  // Color palette - used for inline style overrides
+  // --- Color palette for styling
   const COLOR = {
-    accent: '#e94e77',     // pink-accent
-    primary: '#4a90e2',    // blue-main
-    secondary: '#50e3c2',  // teal-support
+    accent: '#e94e77',
+    primary: '#4a90e2',
+    secondary: '#50e3c2'
   };
 
-  // --- Task structure: {id, title, completed, created_at}
-  // Note: Supabase returns 'id' as int (autoincrement, PK), created_at as ISO string.
+  // --- Supabase client initialization using standard env vars
+  const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
+  const SUPABASE_KEY = process.env.REACT_APP_SUPABASE_KEY;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const [tasks, setTasks] = useState([]);
+  // --- Core app state
+  const [tasks, setTasks] = useState([]); // Supabase data
   const [input, setInput] = useState('');
   const [editTaskId, setEditTaskId] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [filter, setFilter] = useState('all'); // all, active, completed
+  const [filter, setFilter] = useState('all'); // all | active | completed
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
 
-  // --- Supabase Client initialization ---
-  // Duplicate function handlers below (original pre-refactor handlers) are now obsolete and must be removed to prevent build errors.
-
-
-
-
-
-  // Removed duplicate legacy filteredTasks and other variables.
+  // PUBLIC_INTERFACE
+  /**
+   * Load tasks from Supabase on mount/connection change
+   */
+  useEffect(() => {
+    async function fetchTasks() {
+      setLoading(true);
+      setError('');
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) {
+        setError('Failed to load tasks');
+        setTasks([]);
+      } else {
+        setTasks(
+          (data || []).map(t => ({
+            id: t.id,
+            title: t.title,
+            completed: !!t.completed,
+            created_at: t.created_at
+          }))
+        );
+      }
+      setLoading(false);
+    }
+    fetchTasks();
+    // Optionally: subscribe to realtime updates here (see Supabase docs)
+    // eslint-disable-next-line
+  }, [SUPABASE_URL, SUPABASE_KEY]);
 
   // PUBLIC_INTERFACE
   /**
-   * Add a new task. Integrate Supabase API here for persistent storage.
+   * Add a new task to Supabase ('tasks' table) and local state
    */
-  const handleAddTask = (e) => {
+  const handleAddTask = async (e) => {
     e.preventDefault();
     const value = input.trim();
     if (!value) return;
-    // Placeholder: integrate with Supabase REST call here
-    setTasks(prev => [
-      ...prev,
-      {
-        id: Date.now(),
-        title: value,
-        completed: false,
-        createdAt: Date.now()
-      }
-    ]);
-    setInput('');
-    if (inputRef.current) inputRef.current.focus();
+    setLoading(true);
+    setError('');
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([{ title: value, completed: false }])
+      .select();
+    if (error) {
+      setError('Failed to add task');
+    } else if (data && data.length > 0) {
+      setTasks(prev => [
+        ...prev,
+        {
+          id: data[0].id,
+          title: data[0].title,
+          completed: !!data[0].completed,
+          created_at: data[0].created_at
+        }
+      ]);
+      setInput('');
+      if (inputRef.current) inputRef.current.focus();
+    }
+    setLoading(false);
   };
 
   // PUBLIC_INTERFACE
   /**
-   * Begin editing a task by setting edit mode.
+   * Begin editing a task (show edit input for a task)
    */
   const beginEditTask = (taskId, currentTitle) => {
     setEditTaskId(taskId);
@@ -77,39 +117,79 @@ function App() {
 
   // PUBLIC_INTERFACE
   /**
-   * Save edits to an existing task.
+   * Save edits to a task (persist to Supabase)
    */
-  const handleSaveEdit = (taskId) => {
-    setTasks(tasks.map(t =>
-      t.id === taskId ? { ...t, title: editValue.trim() || t.title } : t
-    ));
+  const handleSaveEdit = async (taskId) => {
+    const value = editValue.trim();
+    if (!value) {
+      setEditTaskId(null);
+      setEditValue('');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const { error } = await supabase
+      .from('tasks')
+      .update({ title: value })
+      .eq('id', taskId);
+    if (error) {
+      setError('Failed to update task');
+    } else {
+      setTasks(tasks.map(t =>
+        t.id === taskId ? { ...t, title: value } : t
+      ));
+    }
     setEditTaskId(null);
     setEditValue('');
+    setLoading(false);
   };
 
   // PUBLIC_INTERFACE
   /**
-   * Delete a task. Place API call here for persistent deletion.
+   * Delete a task from Supabase and update UI
    */
-  const handleDeleteTask = (taskId) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
-    // Placeholder: Supabase delete here
+  const handleDeleteTask = async (taskId) => {
+    setLoading(true);
+    setError('');
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId);
+    if (error) {
+      setError('Failed to delete task');
+    } else {
+      setTasks(tasks.filter(t => t.id !== taskId));
+    }
+    setLoading(false);
   };
 
   // PUBLIC_INTERFACE
   /**
-   * Toggle the completed status of a task.
+   * Toggle the completed status and update Supabase
    */
-  const handleToggleComplete = (taskId) => {
-    setTasks(tasks.map(t =>
-      t.id === taskId ? { ...t, completed: !t.completed } : t
-    ));
-    // Placeholder: Supabase update here
+  const handleToggleComplete = async (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const newCompleted = !task.completed;
+    setLoading(true);
+    setError('');
+    const { error } = await supabase
+      .from('tasks')
+      .update({ completed: newCompleted })
+      .eq('id', taskId);
+    if (error) {
+      setError('Failed to update completed status');
+    } else {
+      setTasks(tasks.map(t =>
+        t.id === taskId ? { ...t, completed: newCompleted } : t
+      ));
+    }
+    setLoading(false);
   };
 
   // PUBLIC_INTERFACE
   /**
-   * Filter tasks by status: all/active/completed.
+   * Filter visible tasks list
    */
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
@@ -120,19 +200,18 @@ function App() {
 
   // PUBLIC_INTERFACE
   /**
-   * Utility to get environment variables (REACT_APP_APP_SUPABASE_URL/KEY).
-   * Replace with real API usage for backend integration.
+   * Utility: get env data for Supabase (for footer display)
    */
   const getSupabaseEnv = () => {
     return {
-      url: process.env.REACT_APP_APP_SUPABASE_URL,
-      key: process.env.REACT_APP_APP_SUPABASE_KEY,
+      url: SUPABASE_URL,
+      key: SUPABASE_KEY,
     };
   };
 
   // PUBLIC_INTERFACE
   /**
-   * Handle Enter/Escape for editing
+   * Key handling for edit input
    */
   const handleEditKeyDown = (e, taskId) => {
     if (e.key === 'Enter') {
@@ -172,7 +251,7 @@ function App() {
     );
   }
 
-  // Input task form
+  // Task input form for adding new task
   function TaskInput() {
     return (
       <form
@@ -201,6 +280,7 @@ function App() {
             color: COLOR.primary
           }}
           maxLength={120}
+          disabled={loading}
         />
         <button
           type="submit"
@@ -216,8 +296,9 @@ function App() {
             minHeight: '100%',
             transition: 'background 0.2s'
           }}
+          disabled={loading}
         >
-          Add
+          {loading ? '...' : 'Add'}
         </button>
       </form>
     );
@@ -225,7 +306,7 @@ function App() {
 
   // PUBLIC_INTERFACE
   /**
-   * Filter controls: All / Active / Completed
+   * Filter controls: all / active / completed
    */
   function FilterControls() {
     return (
@@ -263,7 +344,7 @@ function App() {
 
   // PUBLIC_INTERFACE
   /**
-   * Renders each task row (including editing UI).
+   * A single task row (with edit/delete)
    */
   function TaskRow({ task }) {
     const isEditing = editTaskId === task.id;
@@ -288,6 +369,7 @@ function App() {
             marginRight: 10,
             cursor: 'pointer'
           }}
+          disabled={loading}
         />
         {isEditing ? (
           <input
@@ -307,6 +389,7 @@ function App() {
             onBlur={() => handleSaveEdit(task.id)}
             onKeyDown={e => handleEditKeyDown(e, task.id)}
             aria-label="Edit task"
+            disabled={loading}
           />
         ) : (
           <span
@@ -337,6 +420,7 @@ function App() {
                 fontSize: '0.98rem'
               }}
               aria-label="Edit task"
+              disabled={loading}
             >Edit</button>
             <button
               className="action-delete"
@@ -351,6 +435,7 @@ function App() {
                 fontSize: '0.98rem'
               }}
               aria-label="Delete task"
+              disabled={loading}
             >Delete</button>
           </div>
         }
@@ -358,7 +443,10 @@ function App() {
     );
   }
 
-  // List of all tasks (filtered)
+  // PUBLIC_INTERFACE
+  /**
+   * List of tasks. Shows loading/error states.
+   */
   function TaskList() {
     return (
       <ul
@@ -374,7 +462,17 @@ function App() {
           listStyle: 'none'
         }}
       >
-        {filteredTasks.length === 0 ? (
+        {loading && (
+          <li style={{ padding: '2rem', color: COLOR.primary, textAlign: 'center', fontWeight: 500 }}>
+            Loading...
+          </li>
+        )}
+        {!!error && (
+          <li style={{ padding: '2rem', color: COLOR.accent, textAlign: 'center', fontWeight: 500 }}>
+            {error}
+          </li>
+        )}
+        {!loading && !error && filteredTasks.length === 0 ? (
           <li style={{ padding: '2rem', color: '#aaa', textAlign: 'center', fontWeight: 500 }}>
             <span>No tasks {filter === 'all' ? 'found' : `in ${filter} filter`}.</span>
           </li>
@@ -387,7 +485,10 @@ function App() {
     );
   }
 
-  // Footer with info and Supabase connection/help
+  // PUBLIC_INTERFACE
+  /**
+   * Footer with Supabase connection status and quick instructions
+   */
   function AppFooter() {
     const env = getSupabaseEnv();
     return (
@@ -404,19 +505,27 @@ function App() {
         </span>
         <br />
         <span style={{ fontSize: '0.92rem', color: '#ccc', display: 'block', marginTop: '0.35rem' }}>
-          Supabase: {env.url ? <code>connected</code> : <code>not connected: check env (.env)</code>}
+          Supabase: <code>
+            {env.url && env.key
+              ? 'connected'
+              : 'not connected: check .env for REACT_APP_SUPABASE_URL / REACT_APP_SUPABASE_KEY'}
+          </code>
         </span>
         <br />
         <span style={{ fontSize: '0.89rem', color: '#aaa', marginTop: '.2rem', display: 'block' }}>
-          {/* Display small config help */}
-          (.env: REACT_APP_SUPABASE_URL / REACT_APP_SUPABASE_KEY required) <br />
+          <strong>Tip:</strong> Your .env should have<br />
+          <code>REACT_APP_SUPABASE_URL=...</code><br />
+          <code>REACT_APP_SUPABASE_KEY=...</code><br />
+          <em>After editing .env, fully stop &amp; restart <code>npm start</code>.</em>
+          <br />
+          Never commit actual keys to public repos.<br />
           See: <a href="https://supabase.com/docs/" style={{ color: COLOR.primary }}>Supabase Docs</a>
         </span>
       </footer>
     );
   }
 
-  // Responsive main container
+  // --- MAIN COMPONENT RENDER
   return (
     <div
       style={{
