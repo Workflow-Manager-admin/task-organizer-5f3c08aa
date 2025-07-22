@@ -1,104 +1,159 @@
-/* CSS Variables for Theme Management */
+/* CSS Variables for branded palette and responsive light UI */
 :root {
-  /* Light theme colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --text-primary: #282c34;
-  --text-secondary: #61dafb;
-  --border-color: #e9ecef;
-  --button-bg: #007bff;
-  --button-text: #ffffff;
+  --color-accent: #e94e77;
+  --color-primary: #4a90e2;
+  --color-secondary: #50e3c2;
+  --background-main: #f8f9fa;
+  --background-white: #fff;
+  --border-light: #e9ecef;
+  --shadow-light: 0 0 10px 0 rgba(74,144,226,0.06);
 }
 
-[data-theme="dark"] {
-  /* Dark theme colors */
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #282c34;
-  --text-primary: #ffffff;
-  --text-secondary: #61dafb;
-  --border-color: #404040;
-  --button-bg: #0056b3;
-  --button-text: #ffffff;
-}
-
-.App {
-  text-align: center;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+/* General body styles */
+body {
+  background: var(--background-main);
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;
+  color: #222;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.todo-header {
+  box-shadow: var(--shadow-light);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+h1, h2, h3, h4, h5 {
+  font-family: inherit;
+  letter-spacing: 0.01em;
 }
 
-.App-header {
-  background-color: var(--bg-secondary);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: var(--text-primary);
-  transition: background-color 0.3s ease;
-  position: relative;
+/* Task input style */
+.task-input {
+  border: 1.3px solid var(--color-primary);
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 1.05rem;
+  background: var(--background-white);
+  color: var(--color-primary);
+  font-weight: 400;
+  box-sizing: border-box;
+  transition: border 0.13s;
+}
+.task-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
 }
 
-.App-link {
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
-}
-
-.theme-toggle {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: var(--button-bg);
-  color: var(--button-text);
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 10px;
+  padding: 0 1.3rem;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background 0.16s;
+  min-height: 100%;
+}
+.btn-primary:hover {
+  background: #c13a60;
 }
 
-.theme-toggle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  opacity: 0.9;
+/* Filter Button */
+.filter-btn {
+  outline: none;
+  transition: background 0.17s;
+}
+.filter-btn:focus {
+  border-color: var(--color-accent);
 }
 
-.theme-toggle:active {
-  transform: translateY(0);
+/* Task List and Row */
+.task-list {
+  background: var(--background-white);
+  border-radius: 14px;
+  box-shadow: var(--shadow-light);
+  margin-top: 2rem;
+  list-style: none;
+  padding: 0;
+}
+.task-row {
+  transition: background 0.11s, opacity 0.11s;
+  border-bottom: 1px solid var(--border-light);
+}
+.task-row:last-child {
+  border-bottom: none;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Editing input */
+.edit-input {
+  border: 1.6px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 0.7rem;
+  font-size: 1rem;
+  color: #222;
+  background: #fefefe;
+  width: 99%;
+  transition: border 0.14s;
+}
+.edit-input:focus {
+  border-color: var(--color-secondary);
 }
 
-/* Responsive design for mobile */
+/* Actions */
+.action-edit {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 7px;
+  padding: 0.4rem 0.75rem;
+  margin-right: 3px;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.action-edit:hover {
+  background: #3469b6;
+}
+.action-delete {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 7px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+.action-delete:hover {
+  background: #c13a60;
+}
+
+/* Misc states and responsive adjustments */
 @media (max-width: 768px) {
-  .theme-toggle {
-    top: 10px;
-    right: 10px;
-    padding: 8px 16px;
-    font-size: 12px;
+  .task-list {
+    margin-top: 1.2rem;
+    max-width: 97vw;
+  }
+  .todo-header {
+    padding: 1.2rem 0 0.7rem 0 !important;
+  }
+  .filter-controls {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .task-input, .btn-primary {
+    font-size: .97rem;
+    padding: 0.7rem 1rem;
+  }
+  .edit-input {
+    padding: 0.5rem;
+    font-size: 0.98rem;
   }
 }
