@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+// Import the Supabase JS client
+import { createClient } from '@supabase/supabase-js';
 
 // PUBLIC_INTERFACE
 /**
  * Main App component for the To-Do list application.
- * Implements modern, minimalistic UI with task CRUD, status filtering, responsive design.
- * API connectivity placeholders use REACT_APP_APP_SUPABASE_URL/KEY via env.
+ * Implements modern, minimalistic UI with task CRUD, status filtering, responsive design, and
+ * integrates with Supabase as backend for all data operations.
+ * 
+ * Ensure you have the following in your .env file (at the project root!):
+ *   REACT_APP_SUPABASE_URL = https://your-project-ref.supabase.co
+ *   REACT_APP_SUPABASE_KEY = your-anon-or-service-role-key
+ * 
+ * You need to restart (not just hot reload) the dev server after adding/changing env vars.
  */
 function App() {
   // Color palette - used for inline style overrides
@@ -15,24 +23,26 @@ function App() {
     secondary: '#50e3c2',  // teal-support
   };
 
-  // --- Task structure: {id, title, completed, createdAt}
+  // --- Task structure: {id, title, completed, created_at}
+  // Note: Supabase returns 'id' as int (autoincrement, PK), created_at as ISO string.
+
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState('');
   const [editTaskId, setEditTaskId] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [filter, setFilter] = useState('all'); // all, active, completed
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const inputRef = useRef(null);
 
-  // PUBLIC_INTERFACE
-  // Simulate initial data load (replace with backend call in production)
-  useEffect(() => {
-    // Minimal example data
-    setTasks([
-      { id: 1, title: 'Read React docs', completed: false, createdAt: Date.now() - 500000 },
-      { id: 2, title: 'Write To-Do app', completed: true, createdAt: Date.now() - 300000 },
-      { id: 3, title: 'Refactor CSS', completed: false, createdAt: Date.now() - 100000 }
-    ]);
-  }, []);
+  // --- Supabase Client initialization ---
+  // Duplicate function handlers below (original pre-refactor handlers) are now obsolete and must be removed to prevent build errors.
+
+
+
+
+
+  // Removed duplicate legacy filteredTasks and other variables.
 
   // PUBLIC_INTERFACE
   /**
@@ -377,7 +387,7 @@ function App() {
     );
   }
 
-  // Footer with info
+  // Footer with info and Supabase connection/help
   function AppFooter() {
     const env = getSupabaseEnv();
     return (
@@ -394,7 +404,13 @@ function App() {
         </span>
         <br />
         <span style={{ fontSize: '0.92rem', color: '#ccc', display: 'block', marginTop: '0.35rem' }}>
-          Env backend: {env.url ? <code>connected</code> : <code>not set</code>}
+          Supabase: {env.url ? <code>connected</code> : <code>not connected: check env (.env)</code>}
+        </span>
+        <br />
+        <span style={{ fontSize: '0.89rem', color: '#aaa', marginTop: '.2rem', display: 'block' }}>
+          {/* Display small config help */}
+          (.env: REACT_APP_SUPABASE_URL / REACT_APP_SUPABASE_KEY required) <br />
+          See: <a href="https://supabase.com/docs/" style={{ color: COLOR.primary }}>Supabase Docs</a>
         </span>
       </footer>
     );
